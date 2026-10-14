@@ -113,7 +113,7 @@ function CollectMailFAB() {
         zIndex: 9,
       }}
     >
-      {empty ? "📪" : "📭"}
+      🗑️
     </button>
   );
 }
