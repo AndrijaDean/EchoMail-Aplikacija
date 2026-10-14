@@ -7,7 +7,8 @@ import ClaimMailbox from "./pages/ClaimMailbox";
 import ShareMailbox from "./pages/ShareMailbox";
 import { useTheme } from "./ThemeContext";
 import { getTranslations } from "./translations";
-import { requestNotificationPermission, removeNotificationToken } from "./firebase";
+import { db } from "./firebase";
+import { doc, onSnapshot, updateDoc, addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { useEffect, useState } from "react";
 
 function ThemeSync() {
@@ -42,31 +43,56 @@ function BottomNavLink({ to, icon, label }) {
   );
 }
 
-function NotifFAB() {
-  const [notifEnabled, setNotifEnabled] = useState(
-    localStorage.getItem("notifEnabled") === "true"
-  );
+function CollectMailFAB() {
+  const [mailCount, setMailCount] = useState(0);
+  const [busy, setBusy] = useState(false);
+  const mailboxId = localStorage.getItem("mailboxId");
   const { dark } = useTheme();
   const t = getTranslations();
 
-  const handleNotifToggle = async () => {
-    if (!notifEnabled) {
-      const token = await requestNotificationPermission();
-      if (token) {
-        localStorage.setItem("notifEnabled", "true");
-        setNotifEnabled(true);
-      }
-    } else {
-      await removeNotificationToken();
-      localStorage.setItem("notifEnabled", "false");
-      setNotifEnabled(false);
+  // Prati broj pošte uživo da gumb zna je li sandučić prazan
+  useEffect(() => {
+    if (!mailboxId) return;
+    const unsub = onSnapshot(doc(db, "mailboxes", mailboxId), (snap) => {
+      if (snap.exists()) setMailCount(snap.data().mailCount ?? 0);
+    });
+    return () => unsub();
+  }, [mailboxId]);
+
+  // Nema sandučića — nema ni gumba
+  if (!mailboxId) return null;
+
+  const empty = mailCount === 0;
+
+  const handleCollect = async () => {
+    if (empty || busy) return;
+    if (!window.confirm(t.collectConfirm)) return;
+    setBusy(true);
+    try {
+      // Isto što radi ESP32 kad se pošta pokupi RFID tagom:
+      // brojač na 0 + novi zapis u povijesti (stari zapisi ostaju)
+      await updateDoc(doc(db, "mailboxes", mailboxId), {
+        mailCount: 0,
+        lastCollectedAt: serverTimestamp(),
+      });
+      await addDoc(collection(db, "mailboxes", mailboxId, "history"), {
+        type: "mail_collected",
+        timestamp: serverTimestamp(),
+        source: "app",
+      });
+    } catch (err) {
+      console.error("Greška pri označavanju pošte:", err);
+    } finally {
+      setBusy(false);
     }
   };
 
   return (
     <button
-      onClick={handleNotifToggle}
-      title={notifEnabled ? t.notifOn : t.notifOff}
+      onClick={handleCollect}
+      disabled={empty || busy}
+      title={empty ? t.collectNothing : t.collectMail}
+      aria-label={t.collectMail}
       style={{
         position: "fixed",
         bottom: "80px",
@@ -75,10 +101,11 @@ function NotifFAB() {
         height: "52px",
         borderRadius: "50%",
         border: `2px solid ${dark ? "#2a2a2a" : "#e0e0e0"}`,
-        backgroundColor: notifEnabled ? "#2d8a2d" : (dark ? "#141414" : "#ffffff"),
-        color: notifEnabled ? "white" : "inherit",
+        backgroundColor: empty ? (dark ? "#141414" : "#ffffff") : "#2d8a2d",
+        color: empty ? "inherit" : "white",
+        opacity: empty ? 0.5 : 1,
         fontSize: "22px",
-        cursor: "pointer",
+        cursor: empty || busy ? "default" : "pointer",
         boxShadow: dark ? "3px 3px 0px #000" : "3px 3px 0px #111",
         display: "flex",
         alignItems: "center",
@@ -86,7 +113,7 @@ function NotifFAB() {
         zIndex: 9,
       }}
     >
-      {notifEnabled ? "🔔" : "🔕"}
+      {empty ? "📪" : "📭"}
     </button>
   );
 }
@@ -243,7 +270,7 @@ function App() {
           <Route path="/share" element={<ShareMailbox />} />
         </Routes>
 
-        <NotifFAB />
+        <CollectMailFAB />
 
         <nav style={bottomNavStyle}>
           <BottomNavLink to="/" icon="📬" label={t.status} />
