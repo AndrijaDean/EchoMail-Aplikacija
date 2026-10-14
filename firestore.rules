@@ -1,0 +1,32 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // unclaimed: samo Cloud Function smije čitati/brisati
+    // ESP32 (bilo koji auth user) smije kreirati
+    match /unclaimed/{mailboxId} {
+      allow create: if request.auth != null;
+      allow read, update, delete: if false;
+    }
+
+    // mailboxes: otvoreno (opcija A — zaštita je obscurity mailboxId-a)
+    match /mailboxes/{mailboxId} {
+      allow read, update: if true;
+      allow create, delete: if false;
+
+      match /{subcoll}/{doc} {
+        allow read, write: if true;
+      }
+    }
+
+    // share_invites: sve preko CF-a, klijenti nemaju direktan pristup
+    match /share_invites/{code} {
+      allow read, write: if false;
+    }
+
+    // fcmTokens: bilo koji auth user smije pisati svoj token
+    match /fcmTokens/{tokenId} {
+      allow read, write: if true;
+    }
+  }
+}

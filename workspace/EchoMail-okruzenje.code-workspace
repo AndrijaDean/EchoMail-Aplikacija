@@ -1,0 +1,11 @@
+{
+	"folders": [
+		{
+			"path": "moja-aplikacija"
+		},
+		{
+			"path": "PlatformIO/Projects/EchoMail-ESP32"
+		}
+	],
+	"settings": {}
+}
