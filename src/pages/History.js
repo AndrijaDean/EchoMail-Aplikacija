@@ -73,9 +73,6 @@ function History() {
   return (
     <div style={containerStyle}>
       <div style={{ marginBottom: "24px" }}>
-        <div style={{ fontSize: "11px", letterSpacing: "0.15em", opacity: 0.4, marginBottom: "6px" }}>
-          {t.deviceLabel} / {mailboxId ? mailboxId.slice(0, 8) + "…" : "—"}
-        </div>
         <h1 style={{ fontSize: "28px", fontWeight: "700" }}>{t.historyTitle}</h1>
       </div>
 
