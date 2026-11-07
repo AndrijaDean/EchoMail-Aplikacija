@@ -6,7 +6,6 @@ function Settings() {
   const { dark } = useTheme();
   const t = getTranslations();
   const navigate = useNavigate();
-  const mailboxId = localStorage.getItem("mailboxId");
 
   const cardStyle = {
     maxWidth: "460px",
@@ -38,19 +37,6 @@ function Settings() {
     color: dark ? "#f0ede8" : "#111",
   };
 
-  const idBox = {
-    padding: "14px",
-    marginTop: "8px",
-    marginBottom: "20px",
-    borderRadius: "4px",
-    border: `2px solid ${dark ? "#2a2a2a" : "#e0e0e0"}`,
-    backgroundColor: dark ? "#0a0a0a" : "#fafafa",
-    color: dark ? "#f0ede8" : "#111",
-    fontFamily: "monospace",
-    fontSize: "12px",
-    wordBreak: "break-all",
-  };
-
   return (
     <div style={{ padding: "20px" }}>
       <div style={cardStyle}>
@@ -61,20 +47,7 @@ function Settings() {
           {t.configTitle}
         </h1>
 
-        {mailboxId ? (
-          <>
-            <label style={{ fontSize: "12px", letterSpacing: "0.1em", opacity: 0.6 }}>
-              MAILBOX ID
-            </label>
-            <div style={idBox}>{mailboxId}</div>
-          </>
-        ) : (
-          <p style={{ fontSize: "14px", opacity: 0.6, marginBottom: "20px" }}>
-            {t.noMailboxAdded}
-          </p>
-        )}
-
-        <div style={{ marginTop: "32px", paddingTop: "24px", borderTop: `1px solid ${dark ? "#2a2a2a" : "#e0e0e0"}` }}>
+        <div>
           <div style={{ fontSize: "11px", letterSpacing: "0.15em", opacity: 0.4, marginBottom: "8px" }}>
             {t.claimSectionLabel?.toUpperCase()}
           </div>

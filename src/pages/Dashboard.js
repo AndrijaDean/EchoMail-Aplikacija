@@ -65,9 +65,6 @@ function Dashboard() {
   return (
     <div style={{ padding: "20px" }}>
       <div style={cardStyle}>
-        <div style={{ fontSize: "11px", letterSpacing: "0.15em", opacity: 0.4, marginBottom: "6px" }}>
-          {t.deviceLabel} / {mailboxId.slice(0, 8)}…
-        </div>
         <h1 style={{ fontSize: "28px", fontWeight: "700", letterSpacing: "-0.01em" }}>
           {t.mailboxStatus}
         </h1>
